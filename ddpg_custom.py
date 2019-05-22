@@ -5,33 +5,58 @@ import torch
 from collections import deque
 from ddpg_agent import Agent
 
+
 class DDPGCustomAgent:
-    def __init__(self, environment, episode_number=10,max_time_steps=1000):
+    def __init__(self, environment, episode_number=20, max_time_steps=5):
         self.environment = environment
         self.episode_number = episode_number
         self.max_time_steps = max_time_steps
         self.run = []
         self.scores = []
         self.policies = []
-        self.agent = Agent(state_size=5, action_size=2, random_seed=0)
+        self.agent = Agent(state_size=1, action_size=2, random_seed=0)
+
+    def train(self):
+        # scores_window = deque(maxlen=100)
+        # scores = np.zeros(1)
+        # scores_episode = []
+        for i in range(self.episode_number):
+            candidates = []
+            for j in range(1, self.max_time_steps + 1):
+                policy = {}
+                state = np.array([j]).reshape(1, 1)
+                action = self.agent.act(state=state)
+                policy[str(state)] = list(action[0])
+                # candidates.append(policy)
+                reward = self.environment.evaluateReward(action[0])
+                next_state = j + 1
+                done = False
+                if j == 5:
+                    next_state = 1
+                    done = True
+                self.agent.step(j, state, action, reward, next_state, done)
+        torch.save(Agent.actor_local.state_dict(), 'models/arm_actor.pth')
+        torch.save(Agent.critic_local.state_dict(), 'models/arm_critic.pth')
 
     def generate(self):
         best_policy = None
         best_reward = -float('Inf')
         candidates = []
-
         try:
             # select a set of random candidate solutions to be evaluated
             for i in range(self.episode_number):
+                print("epoch=", i)
                 self.environment.reset()
 
-                for t in range(self.max_time_steps):
-                    policy = {}
-                    for j in range(5):
-                        state = j + 1
-                        policy[str(state)] = np.array(self.agent.act(state=state))
-                        self.environment.evaluatePolicy(candidates)  # send the action to the environment
-                    candidates.append(policy)
+                # for t in range(self.max_time_steps):
+                policy = {}
+                for j in range(self.max_time_steps):
+                    state = j + 1
+                    state_array = np.array([state]).reshape(1, 1)
+                    # print("state=", state_array)
+                    # print("action=", list(self.agent.act(state=state_array)[0]))
+                    policy[str(state)] = list(self.agent.act(state=state_array)[0])
+                candidates.append(policy)
             print("candidates len=", len(candidates))
             rewards = self.environment.evaluatePolicy(candidates)
             best_policy = candidates[np.argmax(rewards)]
@@ -71,4 +96,8 @@ if __name__ == '__main__':
     # a.scoringFunction()
     # a.create_submissions("test.csv")
     # print("Hello KDD2019")
-    EvaluateChallengeSubmission(ChallengeSeqDecEnvironment, CustomAgent, "tutorial.csv")
+    # EvaluateChallengeSubmission(ChallengeSeqDecEnvironment, DDPGCustomAgent, "tutorial.csv")
+
+    env = ChallengeEnvironment(experimentCount=5)
+    agent = DDPGCustomAgent(environment=env, episode_number=10)
+    agent.train()
