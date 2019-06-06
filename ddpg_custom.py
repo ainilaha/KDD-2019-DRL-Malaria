@@ -21,20 +21,19 @@ class DDPGCustomAgent:
         # scores = np.zeros(1)
         # scores_episode = []
         for i in range(self.episode_number):
-            candidates = []
-            for j in range(1, self.max_time_steps + 1):
-                policy = {}
-                state = np.array([j]).reshape(1, 1)
+            policy = {}
+            self.environment.reset()
+            next_state = self.environment.state
+            while True:
+                state = next_state
                 action = self.agent.act(state=state)
                 policy[str(state)] = list(action[0])
                 # candidates.append(policy)
-                reward = self.environment.evaluateReward(action[0])
-                next_state = j + 1
-                done = False
-                if j == 5:
-                    next_state = 1
-                    done = True
-                self.agent.step(j, state, action, reward, next_state, done)
+                #reward = self.environment.evaluateReward(action[0])
+                next_state, reward, done, _ = self.environment.evaluateAction(action)
+                if done:
+                    break
+
         torch.save(Agent.actor_local.state_dict(), 'models/arm_actor.pth')
         torch.save(Agent.critic_local.state_dict(), 'models/arm_critic.pth')
 
@@ -90,7 +89,7 @@ class DDPGCustomAgent:
 
 
 if __name__ == '__main__':
-    # env = ChallengeSeqDecEnvironment()
+    env = ChallengeSeqDecEnvironment()
     # # env.evaluatePolicy()
     # a = CustomAgent(env)
     # a.scoringFunction()
@@ -98,6 +97,6 @@ if __name__ == '__main__':
     # print("Hello KDD2019")
     # EvaluateChallengeSubmission(ChallengeSeqDecEnvironment, DDPGCustomAgent, "tutorial.csv")
 
-    env = ChallengeEnvironment(experimentCount=5)
+    # env = ChallengeEnvironment(experimentCount=5)
     agent = DDPGCustomAgent(environment=env, episode_number=10)
     agent.train()
