@@ -4,7 +4,6 @@ import copy
 from collections import namedtuple, deque
 
 from model import Actor, Critic
-
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
@@ -18,7 +17,7 @@ LR_CRITIC = 1e-4  # learning rate of the critic
 WEIGHT_DECAY = 0.0  # L2 weight decay
 
 N_LEARN_UPDATES = 10  # number of learning updates
-N_TIME_STEPS = 20  # every n time step do update
+N_TIME_STEPS = 5  # every n time step do update
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
