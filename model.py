@@ -14,7 +14,7 @@ def hidden_init(layer):
 class Actor(nn.Module):
     """Actor (Policy) Model."""
 
-    def __init__(self, state_size, action_size, seed, fc1_units=512, fc2_units=258):
+    def __init__(self, state_size, action_size, seed, fc1_units=4, fc2_units=2):
         """Initialize parameters and build model.
         Params
         ======
